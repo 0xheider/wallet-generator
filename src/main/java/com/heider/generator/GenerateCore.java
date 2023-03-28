@@ -2,6 +2,7 @@ package com.heider.generator;
 
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -111,9 +112,8 @@ public class GenerateCore {
                 log.info("已尝试生成钱包次数：{}", execTimes.get());
             }
             executor.submit(() -> {
-                byte[] initialEntropy = RandomUtils.nextBytes(16);
-                String mnemonic = MnemonicUtils.generateMnemonic(initialEntropy);
-                Credentials credentials = WalletUtils.loadBip39Credentials("", mnemonic);
+                String random = RandomStringUtils.random(64, "0123456789abcdef");
+                Credentials credentials = Credentials.create(random);
                 String address = credentials.getAddress();
                 if ((StringUtils.isNotBlank(prefix) ? address.startsWith(prefix) : true)
                         && (StringUtils.isNotBlank(include) ? address.contains(include) : true)
