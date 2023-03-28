@@ -16,7 +16,9 @@ import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -37,6 +39,10 @@ public class GenerateCore {
     private Boolean saveFile;
 
     public ThreadPoolExecutor executor;
+
+    private static File file = new File("." + File.separator + "wallet.dat");
+
+    static DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Value("${threads}")
     public void setExecutor(Integer threads) {
@@ -116,23 +122,29 @@ public class GenerateCore {
                     String privateKeyHex = "0x" + privateKey.toString(16);
                     log.info("恭喜您，钱包已生成！");
                     log.info("address:{}", address);
-                    log.info("mnemonic:{}", mnemonic);
-                    log.info("privateKey:{}", privateKeyHex);
+                    //log.info("mnemonic:{}", mnemonic);
                     if (saveFile) {
-                        try {
-                            File file = new File("." + File.separator + System.currentTimeMillis() + "_" + (StringUtils.isNotBlank(prefix) ? prefix + "-" : "") + (StringUtils.isNotBlank(include) ? include + "-" : "") + suffix + ".txt");
-                            ArrayList<String> lines = new ArrayList<>();
-                            lines.add("address:" + address);
-                            lines.add("mnemonic:" + mnemonic);
-                            lines.add("privateKey:" + privateKeyHex);
-                            FileUtils.writeLines(file, lines);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
+                        save(address, privateKeyHex);
+                    } else {
+                        log.info("privateKey:{}", privateKeyHex);
                     }
                 }
                 execTimes.incrementAndGet();
             });
+        }
+    }
+
+    public synchronized static void save(String address, String privateKeyHex) {
+        try {
+            ArrayList<String> lines = new ArrayList<>();
+            lines.add("生成时间:" + LocalDateTime.now().format(dateTimeFormatter));
+            lines.add("address:" + address);
+            //lines.add("mnemonic:" + mnemonic);
+            lines.add("privateKey:" + privateKeyHex);
+            lines.add("---------------------------------------------------------------------------------------");
+            FileUtils.writeLines(file, lines, true);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 
